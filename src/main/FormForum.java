@@ -1,7 +1,13 @@
 package main;
 
 import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -10,6 +16,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -20,45 +27,49 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import model.Gymnasium;
+import model.Peralatan;
+import util.Connect;
 
-public class DetailLapangan extends Application{
+public class FormForum extends Application{
 	
 	private Scene scene;
 	private BorderPane bpMain;
 	private FlowPane fpHeader;
-	private GridPane gpContainer, gpDeskripsi;
-	private Label judulLbl, namaLbl, fasilitasLbl, hargaLbl, hargaaLbl, jamOperasionalLbl, jamOperasionallLbl;
-	private TextArea alamatTA;
-	private ImageView fotoIV;
-	private Button bookBtn;
-	private HBox menuHB, homeHB, tandingHB, historyHB, forumHB, profileHB, backHB, btnHB;
+	private GridPane gpContainer;
+	private Label judulLbl, judulForumLbl, isiForumLbl, errorLbl;
+	private TextField judulTF;
+	private TextArea isiTA;
+	private Button submitBtn;
+	private HBox menuHB, homeHB, tandingHB, historyHB, forumHB, profileHB, backHB, submitHB;
 	private Image homeImg, tandingImg, historyImg, forumImg, profileImg, backImg;
 	private ImageView homeIV, tandingIV, historyIV, forumIV, profileIV, backImgView;
-	private Font judulFont, namaFont, deskripsiBold, deskripsiFont;
-	
-	private Gymnasium gymnasium;
+	private Font judulFont, namaFont, font16;
 
+	private Connect connect = Connect.getInstance();
+	private String idCustomer;
+	private ArrayList<Peralatan> dataEquipment = new ArrayList<>();
+	
+	private void insertForum() {
+		LocalDate date = LocalDate.now();
+		
+		String query = String.format("INSERT INTO forum VALUES(null, '%s', '%s', '%s', '%s')", idCustomer, judulTF.getText(), isiTA.getText(), date.toString());
+		connect.execUpdate(query);
+	}
 	
 	private void initialize() {
 		bpMain = new BorderPane();
 		fpHeader = new FlowPane();
 		gpContainer = new GridPane();
-		gpDeskripsi = new GridPane();
 		
-		judulLbl = new Label("Detail Lapangan");
-		namaLbl = new Label();
-		fasilitasLbl = new Label("Fasilitas");
-		hargaLbl = new Label("Harga");
-		hargaaLbl = new Label();
-		jamOperasionalLbl = new Label("Jam Operasional");
-		jamOperasionallLbl = new Label();
+		judulLbl = new Label("Post Forum");
+		judulForumLbl = new Label("Judul Forum");
+		isiForumLbl = new Label("Isi Forum");
+		errorLbl = new Label();
 		
-		fotoIV = new ImageView();
+		judulTF = new TextField();
+		isiTA = new TextArea();
 		
-		alamatTA = new TextArea();
-		
-		bookBtn = new Button("Book");
+		submitBtn = new Button("Submit");
 		
 		menuHB = new HBox();
 		homeHB = new HBox();
@@ -67,7 +78,7 @@ public class DetailLapangan extends Application{
 		forumHB = new HBox();
 		profileHB = new HBox();
 		backHB = new HBox();
-		btnHB = new HBox();
+		submitHB = new HBox();
 		
 		homeImg = new Image("InHome.png");
 		tandingImg = new Image("InTanding.png");
@@ -85,39 +96,9 @@ public class DetailLapangan extends Application{
 		
 		judulFont = Font.font("Poppins", FontWeight.BOLD, 30);
 		namaFont = Font.font("Poppins", FontWeight.BOLD, 20);
-		deskripsiBold = Font.font("Poppins", FontWeight.BOLD, 17);
-		deskripsiFont = Font.font("Poppins", 15);
+		font16 = Font.font("Poppins", 16);
 		
 		scene = new Scene(bpMain, 390, 800);
-	}
-	
-	private void setData() {
-		namaLbl.setText(gymnasium.getNamaGymnasium());
-		
-		InputStream inputStream;
-		Image image;
-		
-		try {
-			inputStream = gymnasium.getFotoGymnasium().getBinaryStream();
-			image = new Image(inputStream, 342, 160, false, false);
-			fotoIV.setImage(image);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		alamatTA.setText(gymnasium.getAlamatGymnasium());
-		
-		int rowIndex = 1;
-		String[] fasilitasStr = gymnasium.getDeskrpsiFasilitas().split(",");
-		for (String string : fasilitasStr) {
-			Label label = new Label("- " + string);
-			gpDeskripsi.add(label, 0, rowIndex);
-			label.setFont(deskripsiFont);
-			rowIndex++;
-		}
-		
-		hargaaLbl.setText("Rp" + gymnasium.getHargaGymnasium() + "/jam");
-		jamOperasionallLbl.setText(gymnasium.getJamBuka() + " - " + gymnasium.getJamTutup());
 	}
 
 	private void positioning() {
@@ -125,19 +106,14 @@ public class DetailLapangan extends Application{
 		
 		fpHeader.getChildren().addAll(backHB, judulLbl);
 		
-		gpDeskripsi.add(fasilitasLbl, 0, 0);
-		gpDeskripsi.add(hargaLbl, 1, 0);
-		gpDeskripsi.add(hargaaLbl, 1, 1);
-		gpDeskripsi.add(jamOperasionalLbl, 1, 3);
-		gpDeskripsi.add(jamOperasionallLbl, 1, 4);
+		submitHB.getChildren().add(submitBtn);
 		
-		btnHB.getChildren().add(bookBtn);
-		
-		gpContainer.add(namaLbl, 0, 0);
-		gpContainer.add(fotoIV, 0, 1);
-		gpContainer.add(alamatTA, 0, 2);
-		gpContainer.add(gpDeskripsi, 0, 3);
-		gpContainer.add(btnHB, 0, 4);
+		gpContainer.add(judulForumLbl, 0, 0);
+		gpContainer.add(judulTF, 0, 1);
+		gpContainer.add(isiForumLbl, 0, 2);
+		gpContainer.add(isiTA, 0, 3);
+		gpContainer.add(errorLbl, 0, 4);
+		gpContainer.add(submitHB, 0, 5);
 		
 		homeHB.getChildren().add(homeIV);
 		tandingHB.getChildren().add(tandingIV);
@@ -158,7 +134,8 @@ public class DetailLapangan extends Application{
 		
 		fpHeader.setAlignment(Pos.CENTER_LEFT);
 		fpHeader.setPadding(new Insets(0, 0, 0, 24));
-		fpHeader.setHgap(24);
+		judulLbl.setMinWidth(294);
+		judulLbl.setAlignment(Pos.CENTER);
 		
 		backHB.setAlignment(Pos.CENTER_LEFT);
 		
@@ -167,35 +144,31 @@ public class DetailLapangan extends Application{
 		judulLbl.setTextFill(Color.web("#458E5E"));
 
 		gpContainer.setPadding(new Insets(24));
-		gpContainer.setVgap(12);
+		gpContainer.setVgap(4);
+		gpContainer.setMargin(judulTF, new Insets(0, 0, 8, 0));
 		
-		namaLbl.setFont(namaFont);
+		judulForumLbl.setFont(font16);
+		isiForumLbl.setFont(font16);
 		
-		fotoIV.setStyle("-fx-background-radius: 12px;");
+		judulTF.setPrefSize(342, 40);
+		judulTF.setStyle("-fx-border-color: #000000; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
+		isiTA.setMinSize(342, 90);
+		isiTA.setMaxSize(342, 90);
+		isiTA.setStyle("-fx-border-color: #000000; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
+		isiTA.setWrapText(true);
 		
-		alamatTA.setWrapText(true);
-		alamatTA.setEditable(false);
-		alamatTA.setMinHeight(100);
-		alamatTA.setMaxHeight(100);
-		alamatTA.setStyle("-fx-text-fill: black;");
+		errorLbl.setFont(font16);
+		errorLbl.setTextFill(Color.RED);
 		
-		gpDeskripsi.setPrefHeight(400);
+		submitBtn.setStyle("-fx-background-color: #FF7E46; -fx-background-radius: 8px;");
+		submitBtn.setPrefSize(160, 48);
+		submitBtn.setTextFill(Color.WHITE);
+		submitBtn.setFont(namaFont);
 		
-		fasilitasLbl.setPadding(new Insets(0, 120, 0, 0));
-		fasilitasLbl.setFont(deskripsiBold);
-		hargaLbl.setFont(deskripsiBold);
-		jamOperasionalLbl.setFont(deskripsiBold);
-		hargaaLbl.setFont(deskripsiFont);
-		jamOperasionallLbl.setFont(deskripsiFont);
+		submitHB.setPrefSize(390, 500);
+		submitHB.setAlignment(Pos.BOTTOM_CENTER);
+		submitHB.setPadding(new Insets(0, 0, 12, 0));
 		
-		bookBtn.setStyle("-fx-background-color: #FF7E46; -fx-background-radius: 8px;");
-		bookBtn.setPrefSize(160, 48);
-		bookBtn.setTextFill(Color.WHITE);
-		bookBtn.setFont(namaFont);
-		
-		btnHB.setAlignment(Pos.BOTTOM_CENTER);
-		btnHB.setMargin(bookBtn, new Insets(0, 0, 12, 0));
-				
 		menuHB.setPrefWidth(390);
 		menuHB.setStyle("-fx-background-color: #F4F4F4; -fx-border-color: black transparent transparent transparent");
 		menuHB.setPadding(new Insets(4, 26, 4, 26));
@@ -209,17 +182,26 @@ public class DetailLapangan extends Application{
 	
 	private void handler(Stage stage) {
 		backHB.setOnMouseClicked(e -> {
-			new DaftarGymnasium(stage, DaftarGymnasium.idJenis);
+			new Forum(stage, Home.idCustomer);
 		});
 		
-		bookBtn.setOnMouseClicked(e -> {
-			new BookingLapangan(stage, gymnasium);
+		submitBtn.setOnMouseClicked(e -> {
+			if (judulTF.getText().isEmpty() || isiTA.getText().isEmpty()) {
+				errorLbl.setText("Isi semua field!");
+			}else if (isiTA.getText().length() > 255) {
+				errorLbl.setText("Isi forum tidak melebihi 255 karakter!");
+			}else {
+				errorLbl.setText("");
+				insertForum();
+				new Forum(stage, Home.idCustomer);
+			}
 		});
+		
 	}
 	
-	public DetailLapangan(Stage stage, Gymnasium inputGymnasium) {
-		gymnasium = inputGymnasium;
-				
+	public FormForum(Stage stage, String inputIdCustomer) {
+		idCustomer = inputIdCustomer;
+		
 		try {
 			this.start(stage);
 		} catch (Exception e) {
@@ -230,7 +212,6 @@ public class DetailLapangan extends Application{
 	@Override
 	public void start(Stage detailLapanganStage) throws Exception {
 		initialize();
-		setData();
 		positioning();
 		style();
 		

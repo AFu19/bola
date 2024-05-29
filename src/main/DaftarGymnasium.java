@@ -21,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import model.Gymnasium;
 import util.Connect;
@@ -120,7 +121,7 @@ public class DaftarGymnasium extends Application{
 			ImageView imageView = new ImageView();
 			
 			Label namaGymnasium = new Label();
-			javafx.scene.control.TextArea alamat = new javafx.scene.control.TextArea();
+			Text alamat = new Text();
 			
 			try {
 				inputStream = gymnasium.getFotoGymnasium().getBinaryStream();
@@ -149,9 +150,7 @@ public class DaftarGymnasium extends Application{
 				
 				namaGymnasium.setFont(namaFont);
 				alamat.setFont(alamatFont);
-				alamat.setDisable(true);
-				alamat.setPrefSize(190, 80);
-				alamat.setWrapText(true);
+				alamat.setWrappingWidth(190);
 				
 				//add to listview
 				gymnasiumListView.getItems().add(hb);
@@ -212,11 +211,13 @@ public class DaftarGymnasium extends Application{
 
 	private void handler(Stage stage) {
 		backHB.setOnMouseClicked(e -> {
-			new Home(stage);
+			new Home(stage, Home.idCustomer);
 		});
 		
 		gymnasiumListView.setOnMouseClicked(e -> {
-			new DetailLapangan(stage, dataGymnasium.get(gymnasiumListView.getSelectionModel().getSelectedIndex()));
+			if (!gymnasiumListView.getSelectionModel().isEmpty()) {
+				new DetailLapangan(stage, dataGymnasium.get(gymnasiumListView.getSelectionModel().getSelectedIndex()));				
+			}
 		});
 	}
 	

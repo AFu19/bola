@@ -40,6 +40,7 @@ public class Home extends Application{
 	
 	private ArrayList<JenisLapangan> dataJenisLapangan = new ArrayList<>();
 	private Connect connect = Connect.getInstance();
+	public static String idCustomer;
 	
 	int idJenis = 0;
 	
@@ -200,14 +201,32 @@ public class Home extends Application{
 		});
 		
 		jenisListView.setOnMouseClicked(e -> {
-			idJenis = jenisListView.getSelectionModel().getSelectedIndex() + 1;
 			
-			new DaftarGymnasium(stage, idJenis);
+			if (!jenisListView.getSelectionModel().isEmpty()) {
+				idJenis = jenisListView.getSelectionModel().getSelectedIndex() + 1;
+				
+				new DaftarGymnasium(stage, idJenis);				
+			}
+		});
+		
+		//menu
+		historyHB.setOnMouseClicked(e -> {
+			new History(stage, idCustomer);
+		});
+		
+		forumHB.setOnMouseClicked(e -> {
+			new Forum(stage, idCustomer);
+		});
+		
+		profileHB.setOnMouseClicked(e -> {
+			new Profile(stage, idCustomer);
 		});
 		
 	}
 	
-	public Home(Stage stage) {
+	public Home(Stage stage, String idCust) {
+		idCustomer = idCust;
+		
 		try {
 			this.start(stage);
 		} catch (Exception e) {

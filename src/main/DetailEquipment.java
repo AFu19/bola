@@ -1,7 +1,11 @@
 package main;
 
 import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.text.SimpleDateFormat;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -9,6 +13,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -19,46 +24,84 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import model.Gymnasium;
+import model.Peralatan;
+import util.Connect;
 
-public class DetailLapangan extends Application{
+public class DetailEquipment extends Application{
 	
 	private Scene scene;
 	private BorderPane bpMain;
 	private FlowPane fpHeader;
-	private GridPane gpContainer, gpDeskripsi;
-	private Label judulLbl, namaLbl, fasilitasLbl, hargaLbl, hargaaLbl, jamOperasionalLbl, jamOperasionallLbl;
-	private TextArea alamatTA;
+	private GridPane gpContainer, gpInput;
+	private Label judulLbl, namaLbl, hargaLbl, hargaaLbl, jumlahLbl, lamaLbl;
 	private ImageView fotoIV;
-	private Button bookBtn;
+	private Button rentBtn;
+	private Spinner<Integer> jlhSpinner, lamaSpinner;
 	private HBox menuHB, homeHB, tandingHB, historyHB, forumHB, profileHB, backHB, btnHB;
 	private Image homeImg, tandingImg, historyImg, forumImg, profileImg, backImg;
 	private ImageView homeIV, tandingIV, historyIV, forumIV, profileIV, backImgView;
 	private Font judulFont, namaFont, deskripsiBold, deskripsiFont;
-	
-	private Gymnasium gymnasium;
 
+	private String idBooking, idGymnasium, idPeralatan;
+	private Peralatan peralatan;
+	private Connect connect = Connect.getInstance();
+	
+	private void getData() {
+		String query = String.format("SELECT * FROM peralatan WHERE idPeralatan = '%s'", idPeralatan);
+		connect.rs = connect.execQuery(query);
+		
+		try {
+			while (connect.rs.next()) {
+				String idPeralatan = connect.rs.getString("idPeralatan");
+				String idGymnasium = connect.rs.getString("idGymnasium");
+				String namaPeralatan = connect.rs.getString("namaPeralatan");
+				int hargaPeralatan = connect.rs.getInt("hargaPeralatan");
+				int stockPeralatan = connect.rs.getInt("stockPeralatan");
+				Blob fotoPeralatan = connect.rs.getBlob("fotoPeralatan");
+				
+				peralatan = new Peralatan(idPeralatan, idGymnasium, namaPeralatan, hargaPeralatan, stockPeralatan, fotoPeralatan);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private int countDurasi() {
+		String query = String.format("SELECT COUNT(DISTINCT idShiftLapangan) FROM detailbooking WHERE idBooking = '%s'", idBooking);
+		connect.rs = connect.execQuery(query);
+		try {
+			while (connect.rs.next()) {
+				return connect.rs.getInt(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return 0;
+	}
 	
 	private void initialize() {
 		bpMain = new BorderPane();
 		fpHeader = new FlowPane();
 		gpContainer = new GridPane();
-		gpDeskripsi = new GridPane();
+		gpInput = new GridPane();
 		
-		judulLbl = new Label("Detail Lapangan");
+		judulLbl = new Label("Detail Equipment");
 		namaLbl = new Label();
-		fasilitasLbl = new Label("Fasilitas");
 		hargaLbl = new Label("Harga");
 		hargaaLbl = new Label();
-		jamOperasionalLbl = new Label("Jam Operasional");
-		jamOperasionallLbl = new Label();
+		jumlahLbl = new Label("Jumlah");
+		lamaLbl = new Label("Lama(jam)");
 		
 		fotoIV = new ImageView();
 		
-		alamatTA = new TextArea();
+		jlhSpinner = new Spinner<>(1, peralatan.getStockPeralatan(), 1);
+		lamaSpinner = new Spinner<>(1, countDurasi(), 1);
 		
-		bookBtn = new Button("Book");
+		rentBtn = new Button("Rent");
 		
 		menuHB = new HBox();
 		homeHB = new HBox();
@@ -85,39 +128,28 @@ public class DetailLapangan extends Application{
 		
 		judulFont = Font.font("Poppins", FontWeight.BOLD, 30);
 		namaFont = Font.font("Poppins", FontWeight.BOLD, 20);
-		deskripsiBold = Font.font("Poppins", FontWeight.BOLD, 17);
-		deskripsiFont = Font.font("Poppins", 15);
+		deskripsiBold = Font.font("Poppins", FontWeight.BOLD, 12);
+		deskripsiFont = Font.font("Poppins", 16);
 		
 		scene = new Scene(bpMain, 390, 800);
 	}
 	
 	private void setData() {
-		namaLbl.setText(gymnasium.getNamaGymnasium());
+		namaLbl.setText(peralatan.getNamaPeralatan());
 		
 		InputStream inputStream;
 		Image image;
 		
 		try {
-			inputStream = gymnasium.getFotoGymnasium().getBinaryStream();
+			inputStream = peralatan.getFotoPeralatan().getBinaryStream();
 			image = new Image(inputStream, 342, 160, false, false);
 			fotoIV.setImage(image);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		
-		alamatTA.setText(gymnasium.getAlamatGymnasium());
-		
-		int rowIndex = 1;
-		String[] fasilitasStr = gymnasium.getDeskrpsiFasilitas().split(",");
-		for (String string : fasilitasStr) {
-			Label label = new Label("- " + string);
-			gpDeskripsi.add(label, 0, rowIndex);
-			label.setFont(deskripsiFont);
-			rowIndex++;
-		}
-		
-		hargaaLbl.setText("Rp" + gymnasium.getHargaGymnasium() + "/jam");
-		jamOperasionallLbl.setText(gymnasium.getJamBuka() + " - " + gymnasium.getJamTutup());
+		hargaaLbl.setText(String.format("Rp%d / jam", peralatan.getHargaPeralatan()));
+
 	}
 
 	private void positioning() {
@@ -125,19 +157,19 @@ public class DetailLapangan extends Application{
 		
 		fpHeader.getChildren().addAll(backHB, judulLbl);
 		
-		gpDeskripsi.add(fasilitasLbl, 0, 0);
-		gpDeskripsi.add(hargaLbl, 1, 0);
-		gpDeskripsi.add(hargaaLbl, 1, 1);
-		gpDeskripsi.add(jamOperasionalLbl, 1, 3);
-		gpDeskripsi.add(jamOperasionallLbl, 1, 4);
+		gpInput.add(jumlahLbl, 0, 0);
+		gpInput.add(jlhSpinner, 0, 1);
+		gpInput.add(lamaLbl, 1, 0);
+		gpInput.add(lamaSpinner, 1, 1);		
 		
-		btnHB.getChildren().add(bookBtn);
+		btnHB.getChildren().addAll(rentBtn);
 		
 		gpContainer.add(namaLbl, 0, 0);
 		gpContainer.add(fotoIV, 0, 1);
-		gpContainer.add(alamatTA, 0, 2);
-		gpContainer.add(gpDeskripsi, 0, 3);
-		gpContainer.add(btnHB, 0, 4);
+		gpContainer.add(hargaLbl, 0, 2);
+		gpContainer.add(hargaaLbl, 0, 3);
+		gpContainer.add(gpInput, 0, 4);
+		gpContainer.add(btnHB, 0, 5);
 		
 		homeHB.getChildren().add(homeIV);
 		tandingHB.getChildren().add(tandingIV);
@@ -158,7 +190,8 @@ public class DetailLapangan extends Application{
 		
 		fpHeader.setAlignment(Pos.CENTER_LEFT);
 		fpHeader.setPadding(new Insets(0, 0, 0, 24));
-		fpHeader.setHgap(24);
+		judulLbl.setMinWidth(294);
+		judulLbl.setAlignment(Pos.CENTER);
 		
 		backHB.setAlignment(Pos.CENTER_LEFT);
 		
@@ -167,34 +200,32 @@ public class DetailLapangan extends Application{
 		judulLbl.setTextFill(Color.web("#458E5E"));
 
 		gpContainer.setPadding(new Insets(24));
-		gpContainer.setVgap(12);
+		gpContainer.setMargin(namaLbl, new Insets(0, 0, 12, 0));
+		gpContainer.setMargin(fotoIV, new Insets(0, 0, 12, 0));
+		gpContainer.setMargin(hargaaLbl, new Insets(0, 0, 12, 0));
 		
 		namaLbl.setFont(namaFont);
 		
 		fotoIV.setStyle("-fx-background-radius: 12px;");
 		
-		alamatTA.setWrapText(true);
-		alamatTA.setEditable(false);
-		alamatTA.setMinHeight(100);
-		alamatTA.setMaxHeight(100);
-		alamatTA.setStyle("-fx-text-fill: black;");
-		
-		gpDeskripsi.setPrefHeight(400);
-		
-		fasilitasLbl.setPadding(new Insets(0, 120, 0, 0));
-		fasilitasLbl.setFont(deskripsiBold);
 		hargaLbl.setFont(deskripsiBold);
-		jamOperasionalLbl.setFont(deskripsiBold);
+		hargaLbl.setTextFill(Color.web("#458E5E"));
 		hargaaLbl.setFont(deskripsiFont);
-		jamOperasionallLbl.setFont(deskripsiFont);
+		jumlahLbl.setFont(deskripsiBold);
+		jumlahLbl.setTextFill(Color.web("#458E5E"));
+		lamaLbl.setFont(deskripsiBold);
+		lamaLbl.setTextFill(Color.web("#458E5E"));
 		
-		bookBtn.setStyle("-fx-background-color: #FF7E46; -fx-background-radius: 8px;");
-		bookBtn.setPrefSize(160, 48);
-		bookBtn.setTextFill(Color.WHITE);
-		bookBtn.setFont(namaFont);
+		gpInput.setHgap(40);
+		
+		rentBtn.setStyle("-fx-background-color: #FF7E46; -fx-background-radius: 8px;");
+		rentBtn.setPrefSize(160, 48);
+		rentBtn.setTextFill(Color.WHITE);
+		rentBtn.setFont(namaFont);
 		
 		btnHB.setAlignment(Pos.BOTTOM_CENTER);
-		btnHB.setMargin(bookBtn, new Insets(0, 0, 12, 0));
+		btnHB.setPadding(new Insets(240, 0, 0, 0));
+		btnHB.setSpacing(16);
 				
 		menuHB.setPrefWidth(390);
 		menuHB.setStyle("-fx-background-color: #F4F4F4; -fx-border-color: black transparent transparent transparent");
@@ -209,17 +240,21 @@ public class DetailLapangan extends Application{
 	
 	private void handler(Stage stage) {
 		backHB.setOnMouseClicked(e -> {
-			new DaftarGymnasium(stage, DaftarGymnasium.idJenis);
+			new EquipmentList(stage, idBooking, idGymnasium);
 		});
 		
-		bookBtn.setOnMouseClicked(e -> {
-			new BookingLapangan(stage, gymnasium);
+		rentBtn.setOnMouseClicked(e -> {
+			int jumlah = jlhSpinner.getValue();
+			int durasi = lamaSpinner.getValue();
+			new  MetodePembayaranPeralatan(stage, idBooking, idGymnasium, idPeralatan, jumlah, durasi);
 		});
 	}
 	
-	public DetailLapangan(Stage stage, Gymnasium inputGymnasium) {
-		gymnasium = inputGymnasium;
-				
+	public DetailEquipment(Stage stage, String inputIdBooking, String inputIdGymnasium, String inputIdPeralatan) {
+		idBooking = inputIdBooking;
+		idGymnasium = inputIdGymnasium;
+		idPeralatan = inputIdPeralatan;
+		
 		try {
 			this.start(stage);
 		} catch (Exception e) {
@@ -229,6 +264,8 @@ public class DetailLapangan extends Application{
 	
 	@Override
 	public void start(Stage detailLapanganStage) throws Exception {
+		getData();
+		
 		initialize();
 		setData();
 		positioning();

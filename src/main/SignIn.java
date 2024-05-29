@@ -170,7 +170,7 @@ public class SignIn extends Application{
 				getLoginData(inputEmail, inputPassword);
 				
 				if (!dataCustomer.isEmpty()) {
-					new Home(stage);
+					new Home(stage, dataCustomer.get(0).getIdCustomer());
 				}else {
 					emptyFieldLbl.setText("Email atau password salah!");
 					if (!gpContainer.getChildren().contains(emptyFieldLbl)) {

@@ -8,6 +8,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import model.Gymnasium;
 
 public class Main extends Application{
 
@@ -38,8 +39,12 @@ public class Main extends Application{
 
 	@Override
 	public void start(Stage initialStage) throws Exception {
-//		new DaftarGymnasium(initialStage, 1);
-		new SignUp(initialStage);
+//		new SignUp(initialStage);
+		new Home(initialStage, "3");
+//		new InformasiPembayaran(initialStage, new Gymnasium("1", "1", "1", "Samrucci Badminton Hall", null, "Jl. Kemandoran VIII No.6 4, RT.4/RW.11, Grogol Utara", "Kamar mandi,Ruang ganti,Parkir Motor,Kantin", 60000, null, null, 4, "Approved"),"2");
+//		new History(initialStage, "1");
+//		new Forum(initialStage, "3");
+//		new FormForum(initialStage, "1");
 		
 //		initialize();
 //		positioning();

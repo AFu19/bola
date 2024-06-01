@@ -218,8 +218,12 @@ public class Profile extends Application{
 		
 		//menu
 		homeHB.setOnMouseClicked(e -> {
-			new Home(stage, Home.idCustomer);
+			new Home(stage, idCustomer);
 		});
+		
+		tandingHB.setOnMouseClicked(e -> {
+			new Tanding(stage, idCustomer);
+		});	
 		
 		historyHB.setOnMouseClicked(e -> {
 			new History(stage, idCustomer);

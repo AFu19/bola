@@ -1,11 +1,7 @@
 package main;
 
-import java.io.InputStream;
-import java.sql.Blob;
 import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -16,7 +12,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -26,50 +21,36 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import model.Peralatan;
+import model.DetailBooking;
+import model.Gymnasium;
+import model.Lomba;
 import util.Connect;
 
-public class FormForum extends Application{
+public class InfoPembayaranLomba extends Application{
 	
 	private Scene scene;
 	private BorderPane bpMain;
 	private FlowPane fpHeader;
 	private GridPane gpContainer;
-	private Label judulLbl, judulForumLbl, isiForumLbl, errorLbl;
-	private TextField judulTF;
-	private TextArea isiTA;
-	private Button submitBtn;
-	private HBox menuHB, homeHB, tandingHB, historyHB, forumHB, profileHB, backHB, submitHB;
-	private Image homeImg, tandingImg, historyImg, forumImg, profileImg, backImg;
-	private ImageView homeIV, tandingIV, historyIV, forumIV, profileIV, backImgView;
-	private Font judulFont, namaFont, font16;
-
-	private Connect connect = Connect.getInstance();
-	private String idCustomer;
-	private ArrayList<Peralatan> dataEquipment = new ArrayList<>();
+	private Label judulLbl;
+	private Button okeBtn;
+	private HBox menuHB, homeHB, tandingHB, historyHB, forumHB, profileHB, backHB, btnHB;
+	private Image homeImg, tandingImg, historyImg, forumImg, profileImg, backImg, petunjukImg;
+	private ImageView homeIV, tandingIV, historyIV, forumIV, profileIV, backImgView, petunjukIV;
+	private Font judulFont, btnFont;
 	
-	private void insertForum() {
-		LocalDate date = LocalDate.now();
-		
-		String query = String.format("INSERT INTO forum VALUES(null, '%s', '%s', '%s', '%s')", idCustomer, judulTF.getText(), isiTA.getText(), date.toString());
-		connect.execUpdate(query);
-	}
+	private Lomba lomba;
 	
 	private void initialize() {
 		bpMain = new BorderPane();
 		fpHeader = new FlowPane();
 		gpContainer = new GridPane();
 		
-		judulLbl = new Label("Post Forum");
-		judulForumLbl = new Label("Judul Forum");
-		isiForumLbl = new Label("Isi Forum");
-		errorLbl = new Label();
+		judulLbl = new Label("Info Pembayaran");
 		
-		judulTF = new TextField();
-		isiTA = new TextArea();
-		
-		submitBtn = new Button("Submit");
+		okeBtn = new Button("Oke");
 		
 		menuHB = new HBox();
 		homeHB = new HBox();
@@ -78,7 +59,7 @@ public class FormForum extends Application{
 		forumHB = new HBox();
 		profileHB = new HBox();
 		backHB = new HBox();
-		submitHB = new HBox();
+		btnHB = new HBox();
 		
 		homeImg = new Image("InHome.png");
 		tandingImg = new Image("InTanding.png");
@@ -86,6 +67,7 @@ public class FormForum extends Application{
 		forumImg = new Image("InForum.png");
 		profileImg = new Image("InProfile.png");
 		backImg = new Image("back.png");
+		petunjukImg = new Image("VirtualAccount.png");
 		
 		homeIV = new ImageView(homeImg);
 		tandingIV = new ImageView(tandingImg);
@@ -93,10 +75,10 @@ public class FormForum extends Application{
 		forumIV = new ImageView(forumImg);
 		profileIV = new ImageView(profileImg);
 		backImgView = new ImageView(backImg);
+		petunjukIV = new ImageView(petunjukImg);
 		
 		judulFont = Font.font("Poppins", FontWeight.BOLD, 30);
-		namaFont = Font.font("Poppins", FontWeight.BOLD, 20);
-		font16 = Font.font("Poppins", 16);
+		btnFont = Font.font("Poppins", FontWeight.BOLD, 22);
 		
 		scene = new Scene(bpMain, 390, 800);
 	}
@@ -106,14 +88,10 @@ public class FormForum extends Application{
 		
 		fpHeader.getChildren().addAll(backHB, judulLbl);
 		
-		submitHB.getChildren().add(submitBtn);
+		btnHB.getChildren().add(okeBtn);
 		
-		gpContainer.add(judulForumLbl, 0, 0);
-		gpContainer.add(judulTF, 0, 1);
-		gpContainer.add(isiForumLbl, 0, 2);
-		gpContainer.add(isiTA, 0, 3);
-		gpContainer.add(errorLbl, 0, 4);
-		gpContainer.add(submitHB, 0, 5);
+		gpContainer.add(petunjukIV, 0, 0);
+		gpContainer.add(btnHB, 0, 1);
 		
 		homeHB.getChildren().add(homeIV);
 		tandingHB.getChildren().add(tandingIV);
@@ -134,8 +112,7 @@ public class FormForum extends Application{
 		
 		fpHeader.setAlignment(Pos.CENTER_LEFT);
 		fpHeader.setPadding(new Insets(0, 0, 0, 24));
-		judulLbl.setMinWidth(294);
-		judulLbl.setAlignment(Pos.CENTER);
+		fpHeader.setHgap(24);
 		
 		backHB.setAlignment(Pos.CENTER_LEFT);
 		
@@ -144,31 +121,17 @@ public class FormForum extends Application{
 		judulLbl.setTextFill(Color.web("#458E5E"));
 
 		gpContainer.setPadding(new Insets(24));
-		gpContainer.setVgap(4);
-		gpContainer.setMargin(judulTF, new Insets(0, 0, 8, 0));
+		gpContainer.setPrefWidth(390);
+		gpContainer.setVgap(48);
 		
-		judulForumLbl.setFont(font16);
-		isiForumLbl.setFont(font16);
+		okeBtn.setStyle("-fx-background-color: #FF7E46; -fx-background-radius: 8px;");
+		okeBtn.setPrefSize(160, 48);
+		okeBtn.setTextFill(Color.WHITE);
+		okeBtn.setFont(btnFont);
 		
-		judulTF.setPrefSize(342, 40);
-		judulTF.setStyle("-fx-border-color: #000000; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
-		isiTA.setMinSize(342, 90);
-		isiTA.setMaxSize(342, 90);
-		isiTA.setStyle("-fx-border-color: #000000; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
-		isiTA.setWrapText(true);
-		
-		errorLbl.setFont(font16);
-		errorLbl.setTextFill(Color.RED);
-		
-		submitBtn.setStyle("-fx-background-color: #FF7E46; -fx-background-radius: 8px;");
-		submitBtn.setPrefSize(160, 48);
-		submitBtn.setTextFill(Color.WHITE);
-		submitBtn.setFont(namaFont);
-		
-		submitHB.setPrefSize(390, 500);
-		submitHB.setAlignment(Pos.BOTTOM_CENTER);
-		submitHB.setPadding(new Insets(0, 0, 12, 0));
-		
+		btnHB.setAlignment(Pos.BOTTOM_CENTER);
+		btnHB.setMargin(okeBtn, new Insets(0, 0, 12, 0));
+				
 		menuHB.setPrefWidth(390);
 		menuHB.setStyle("-fx-background-color: #F4F4F4; -fx-border-color: black transparent transparent transparent");
 		menuHB.setPadding(new Insets(4, 26, 4, 26));
@@ -182,19 +145,85 @@ public class FormForum extends Application{
 	
 	private void handler(Stage stage) {
 		backHB.setOnMouseClicked(e -> {
-			new Forum(stage, Home.idCustomer);
+			new DetailTurnamen(stage, lomba);
 		});
 		
-		submitBtn.setOnMouseClicked(e -> {
-			if (judulTF.getText().isEmpty() || isiTA.getText().isEmpty()) {
-				errorLbl.setText("Isi semua field!");
-			}else if (isiTA.getText().length() > 255) {
-				errorLbl.setText("Isi forum tidak melebihi 255 karakter!");
-			}else {
-				errorLbl.setText("");
-				insertForum();
-				new Forum(stage, Home.idCustomer);
-			}
+		okeBtn.setOnMouseClicked(e -> {
+			Stage popupStage;
+			Scene popupScene;
+			BorderPane popupPane;
+			GridPane labelPane;
+			Image tickImg;
+			ImageView tickIV;
+			Label notifLabel1, notifLabel2;
+			HBox buttonBox;
+			Button nextButton;
+			
+			//initialize
+			popupStage = new Stage();
+			popupPane = new BorderPane();
+			labelPane = new GridPane();
+			tickImg = new Image("tick.png");
+			tickIV = new ImageView(tickImg);
+			notifLabel1 = new Label("Pembayaran");
+			notifLabel2 = new Label("Sukses!");
+			buttonBox = new HBox();
+			nextButton = new Button("Kembali");
+			popupScene = new Scene(popupPane, 222, 254);
+			
+			//positioning
+			labelPane.add(notifLabel1, 0, 0);
+			labelPane.add(notifLabel2, 0, 1);
+			
+			buttonBox.getChildren().add(nextButton);
+			
+			popupPane.setTop(tickIV);
+			popupPane.setCenter(labelPane);
+			popupPane.setBottom(buttonBox);
+			
+			//style
+			popupStage.initModality(Modality.APPLICATION_MODAL);
+			popupStage.setTitle("Notification");
+			popupStage.setResizable(false);
+			popupStage.setMaximized(false);
+			
+			popupPane.setPadding(new Insets(24, 0, 0, 0));
+			popupPane.setPrefSize(166, 206);
+			popupPane.setAlignment(tickIV, Pos.CENTER);
+			
+			labelPane.setPrefSize(166, 90);
+			labelPane.setAlignment(Pos.CENTER);
+			notifLabel1.setFont(Font.font("Poppins", FontWeight.EXTRA_BOLD, 24));
+			notifLabel1.setTextFill(Color.web("#458E5E"));
+			notifLabel1.setMinWidth(166);
+			notifLabel1.setAlignment(Pos.TOP_CENTER);
+			
+			notifLabel2.setFont(Font.font("Poppins", FontWeight.EXTRA_BOLD, 24));
+			notifLabel2.setTextFill(Color.web("#458E5E"));
+			notifLabel2.setMinWidth(166);
+			notifLabel2.setAlignment(Pos.CENTER);
+			
+			nextButton.setStyle("-fx-background-color: #FF7E46; -fx-background-radius: 10px;");
+			nextButton.setFont(Font.font("Poppins", FontWeight.BOLD, 22));
+			nextButton.setMinSize(160, 48);
+			nextButton.setTextFill(Color.WHITE);
+			
+			buttonBox.setPadding(new Insets(0, 0, 24, 0));
+			buttonBox.setAlignment(Pos.TOP_CENTER);
+			
+			//handler
+			popupStage.setOnHidden(event -> {
+				new Tanding(stage, Home.idCustomer);
+			});
+			nextButton.setOnMouseClicked(event -> {
+				popupStage.hide();
+				new Tanding(stage, Home.idCustomer);
+			});
+			
+			//main
+			popupStage.setScene(popupScene);
+			popupStage.showAndWait();
+			
 		});
 
 		//menu
@@ -219,8 +248,8 @@ public class FormForum extends Application{
 		});
 	}
 	
-	public FormForum(Stage stage, String inputIdCustomer) {
-		idCustomer = inputIdCustomer;
+	public InfoPembayaranLomba(Stage stage, Lomba lomba) {
+		this.lomba = lomba;
 		
 		try {
 			this.start(stage);

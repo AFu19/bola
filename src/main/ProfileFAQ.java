@@ -211,14 +211,26 @@ public class ProfileFAQ extends Application{
 				answerText.setText(tempAnswer);
 			}
 		});
-		
+
 		//menu
 		homeHB.setOnMouseClicked(e -> {
 			new Home(stage, Home.idCustomer);
 		});
 		
+		tandingHB.setOnMouseClicked(e -> {
+			new Tanding(stage, Home.idCustomer);
+		});
+		
 		historyHB.setOnMouseClicked(e -> {
-			new History(stage, idCustomer);
+			new History(stage, Home.idCustomer);
+		});
+		
+		forumHB.setOnMouseClicked(e -> {
+			new Forum(stage, Home.idCustomer);
+		});
+		
+		profileHB.setOnMouseClicked(e -> {
+			new Profile(stage, Home.idCustomer);
 		});
 	}
 	

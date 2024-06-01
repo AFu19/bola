@@ -45,7 +45,7 @@ public class BookingLapangan extends Application{
 	private ListView<model.DetailLapangan> lapanganListView;
 	private ListView<ShiftLapangan> shiftLV;
 	private ListView<String> detailBookLV;
-	private Button sparringBtn, submitBtn, cancelBtn;
+	private Button sparringBtn, submitBtn, removeBtn;
 	private HBox menuHB, homeHB, tandingHB, historyHB, forumHB, profileHB, backHB;
 	private VBox btnVB, cancelVB;
 	private Image homeImg, tandingImg, historyImg, forumImg, profileImg, backImg;
@@ -137,7 +137,7 @@ public class BookingLapangan extends Application{
 		
 		sparringBtn = new Button("Open Sparring");
 		submitBtn = new Button("Submit");
-		cancelBtn = new Button("Remove");
+		removeBtn = new Button("Remove");
 		
 		menuHB = new HBox();
 		homeHB = new HBox();
@@ -178,7 +178,20 @@ public class BookingLapangan extends Application{
 	}
 	
 	private void setShiftData(LocalDate date, String idLapangan) {
+		shiftLV.getItems().clear();
+		
 		getShift(gymnasium.getJamBuka(), gymnasium.getJamTutup(), idLapangan, date);
+		
+		for (int i = 0; i < dataDetailBooking.size(); i++) {
+			for (ShiftLapangan shiftLapangan : dataShiftLapangan) {
+				String tempIdLapangan = lapanganListView.getSelectionModel().getSelectedItem().getIdLapangan();
+				
+				if (dataDetailBooking.get(i).getIdShiftLapangan().equals(shiftLapangan.getIdShiftLapangan()) && dataDetailBooking.get(i).getIdLapangan().equals(tempIdLapangan)) {
+					dataShiftLapangan.remove(shiftLapangan);
+					break;
+				}
+			}
+		}
 		
 		shiftLV.setItems(dataShiftLapangan);
 	}
@@ -188,7 +201,7 @@ public class BookingLapangan extends Application{
 		
 		fpHeader.getChildren().addAll(backHB, judulLbl);
 		
-		cancelVB.getChildren().add(cancelBtn);
+		cancelVB.getChildren().add(removeBtn);
 		
 		gpShift.add(lapanganListView, 0, 0);
 		gpShift.add(shiftLV, 1, 0);
@@ -257,12 +270,12 @@ public class BookingLapangan extends Application{
 		gpShift.setPadding(new Insets(0, 0, 80, 0));
 		
 		cancelVB.setAlignment(Pos.CENTER);
-		cancelVB.setMargin(cancelBtn, new Insets(12, 0, 0, 0));
-		cancelBtn.setPrefSize(120, 35);
-		cancelBtn.setStyle("-fx-background-color: white; -fx-border-color: red; -fx-border-radius: 10; -fx-border-width: 2;");
-		cancelBtn.setTextFill(Color.RED);
-		cancelBtn.setFont(btnFont);
-		cancelBtn.setDisable(true);
+		cancelVB.setMargin(removeBtn, new Insets(12, 0, 0, 0));
+		removeBtn.setPrefSize(120, 35);
+		removeBtn.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: red; -fx-border-radius: 10; -fx-border-width: 2;");
+		removeBtn.setTextFill(Color.RED);
+		removeBtn.setFont(btnFont);
+		removeBtn.setDisable(true);
 				
 		sparringBtn.setStyle("-fx-background-color: #FF7E46; -fx-background-radius: 8px;");
 		sparringBtn.setPrefSize(160, 40);
@@ -308,7 +321,7 @@ public class BookingLapangan extends Application{
 		
 		tanggalDP.setOnMouseClicked(e -> {
 			shiftLV.getItems().clear();
-			cancelBtn.setDisable(true);
+			removeBtn.setDisable(true);
 			sparringBtn.setDisable(true);
 			submitBtn.setDisable(true);
 			dataDetailBooking.clear();
@@ -317,8 +330,6 @@ public class BookingLapangan extends Application{
 		});
 		
 		lapanganListView.setOnMouseClicked(e -> {
-			shiftLV.getItems().clear();
-			
 			if (!lapanganListView.getSelectionModel().isEmpty()) {
 				setShiftData(tanggalDP.getValue(), lapanganListView.getSelectionModel().getSelectedItem().getIdLapangan());				
 			}
@@ -328,16 +339,27 @@ public class BookingLapangan extends Application{
 			if (!shiftLV.getSelectionModel().isEmpty()) {
 				String idLapangan = lapanganListView.getSelectionModel().getSelectedItem().getIdLapangan();
 				String idShiftLapangan = shiftLV.getSelectionModel().getSelectedItem().getIdShiftLapangan();
-				String strDetail = lapanganListView.getSelectionModel().getSelectedItem().getNamaLapangan() + " : "
-						+ shiftLV.getSelectionModel().getSelectedItem().getJamMulai() + " - "
-						+ shiftLV.getSelectionModel().getSelectedItem().getJamSelesai();
 				
+				String tempNamaLapangan = lapanganListView.getSelectionModel().getSelectedItem().getNamaLapangan();
+				String tempJamMulai = shiftLV.getSelectionModel().getSelectedItem().getJamMulai().toString();
+				String tempJamSelesai = shiftLV.getSelectionModel().getSelectedItem().getJamSelesai().toString();
+				String strDetail = tempNamaLapangan + " : " + tempJamMulai + " - " + tempJamSelesai;		
 				
 				dataDetailBooking.add(new DetailBooking(null, idLapangan, idShiftLapangan));
 				detailBookLV.getItems().add(strDetail);
 				dataShiftAdded.add(idShiftLapangan);
 				
-				dataShiftLapangan.remove(shiftLV.getSelectionModel().getSelectedIndex());
+				for (int i = 0; i < dataDetailBooking.size(); i++) {
+					for (ShiftLapangan shiftLapangan : dataShiftLapangan) {
+						String tempIdLapangan = lapanganListView.getSelectionModel().getSelectedItem().getIdLapangan();
+						
+						if (dataDetailBooking.get(i).getIdShiftLapangan().equals(shiftLapangan.getIdShiftLapangan()) && dataDetailBooking.get(i).getIdLapangan().equals(tempIdLapangan)) {
+							dataShiftLapangan.remove(shiftLapangan);
+							break;
+						}
+					}
+				}
+//				dataShiftLapangan.remove(shiftLV.getSelectionModel().getSelectedIndex());
 				
 				sparringBtn.setDisable(false);
 				sparringBtn.setOnMouseClicked(event -> {
@@ -352,19 +374,41 @@ public class BookingLapangan extends Application{
 		
 		detailBookLV.setOnMouseClicked(e -> {
 			if (!detailBookLV.getSelectionModel().isEmpty()) {
-				cancelBtn.setDisable(false);
-				cancelBtn.setOnMouseClicked(event -> {
+				removeBtn.setDisable(false);
+				removeBtn.setOnMouseClicked(event -> {
 					dataDetailBooking.remove(detailBookLV.getSelectionModel().getSelectedIndex());
 					detailBookLV.getItems().remove(detailBookLV.getSelectionModel().getSelectedIndex());
+					setShiftData(tanggalDP.getValue(), lapanganListView.getSelectionModel().getSelectedItem().getIdLapangan());
 					
 					if (dataDetailBooking.isEmpty()) {
-						cancelBtn.setDisable(true);
+						removeBtn.setDisable(true);
 						submitBtn.setDisable(true);
 						sparringBtn.setDisable(true);
 					}
 				});
 			}
 		});
+		
+		//menu
+		homeHB.setOnMouseClicked(e -> {
+			new Home(stage, Home.idCustomer);
+		});
+		
+		tandingHB.setOnMouseClicked(e -> {
+			new Tanding(stage, Home.idCustomer);
+		});
+		
+		historyHB.setOnMouseClicked(e -> {
+			new History(stage, Home.idCustomer);
+		});
+		
+		forumHB.setOnMouseClicked(e -> {
+			new Forum(stage, Home.idCustomer);
+		});
+		
+		profileHB.setOnMouseClicked(e -> {
+			new Profile(stage, Home.idCustomer);
+		});		
 	}
 	
 	public BookingLapangan(Stage stage, Gymnasium inputGymnasium) {

@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
@@ -20,54 +21,53 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import model.HistoryObject;
-import model.JenisLapangan;
+import model.Lomba;
 import util.Connect;
 
-public class History extends Application{
+public class Tanding extends Application{
 
 	private Scene scene;
 	private BorderPane bpMain;
 	private GridPane gpContainer, gpJenis;
 	private Label judulLbl;
 	private HBox menuHB, homeHB, tandingHB, historyHB, forumHB, profileHB, subMenuHB;
-	private Button confirmBtn, completeBtn;
+	private Button turnamenBtn, sparringBtn;
 	private Image homeImg, tandingImg, historyImg, forumImg, profileImg;
 	private ImageView homeIV, tandingIV, historyIV, forumIV, profileIV;
 	private Font judulFont, font16Semi, font20Semi, font12;
-	private ListView<HBox> bookingListView;
+	private ListView<HBox> turnamenListView;
 	
-	private ArrayList<HistoryObject> dataHistory = new ArrayList<>();
+	private ArrayList<Lomba> dataLomba = new ArrayList<>();
 	private Connect connect = Connect.getInstance();
 	public String idCustomer;
 	
 	
 	private void getData() {
-		dataHistory.clear();
+		dataLomba.clear();
 		
-		String query = "SELECT DISTINCT bl.idBooking, bl.tanggalBooking, g.idGymnasium, g.namaGymnasium, g.fotoGymnasium \r\n" + 
-				"FROM bookinglapangan bl JOIN detailbooking db ON bl.idBooking = db.idBooking\r\n" + 
-				"JOIN detaillapangan dl ON db.idLapangan = dl.idLapangan\r\n" + 
-				"JOIN gymnasium g ON dl.idGymnasium = g.idGymnasium\r\n" + 
-				"WHERE bl.idCustomer = '" + idCustomer + "'\r\n" + 
-				"AND bl.statusBooking = 'Confirmed'\r\n" +
-				"ORDER BY bl.tanggalBooking";
+		String query = "SELECT * FROM lomba WHERE status = 'Open'";
 		connect.rs = connect.execQuery(query);
 		
 		try {
 			while (connect.rs.next()) {
-				String idBooking = connect.rs.getString("idBooking");
-				Date tanggalBooking = connect.rs.getDate("tanggalBooking");
-				String idGymnasium = connect.rs.getString("idGymnasium");
-				String namaGymnasium = connect.rs.getString("namaGymnasium");
-				Blob fotoGymnasium = connect.rs.getBlob("fotoGymnasium");
+				String idLomba = connect.rs.getString("idLomba");
+				String idAdmin = connect.rs.getString("idAdmin");
+				String namaLomba = connect.rs.getString("namaLomba");
+				Date tanggalLomba = connect.rs.getDate("tanggalLomba");
+				Time waktuLomba = connect.rs.getTime("waktuLomba");
+				String lokasiLomba = connect.rs.getString("lokasiLomba");
+				int prizepool = connect.rs.getInt("prizepool");
+				int hargaPendaftaran = connect.rs.getInt("hargaPendaftaran");
+				String namaContactPerson = connect.rs.getString("namaContactPerson");
+				String telfonContactPerson = connect.rs.getString("telfonContactPerson");
+				int jumlahMaxPartis = connect.rs.getInt("jumlahMaxPartis");
+				String status = connect.rs.getString("status");
 				
-				dataHistory.add(new HistoryObject(idBooking, tanggalBooking, idGymnasium, namaGymnasium, fotoGymnasium));
+				dataLomba.add(new Lomba(idLomba, idAdmin, namaLomba, tanggalLomba, waktuLomba, lokasiLomba, prizepool, hargaPendaftaran, namaContactPerson, telfonContactPerson, jumlahMaxPartis, status));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -79,7 +79,7 @@ public class History extends Application{
 		gpContainer = new GridPane();
 		gpJenis = new GridPane();
 		
-		judulLbl = new Label("History");
+		judulLbl = new Label("Tanding");
 		
 		menuHB = new HBox();
 		homeHB = new HBox();
@@ -89,12 +89,12 @@ public class History extends Application{
 		profileHB = new HBox();
 		subMenuHB = new HBox();
 		
-		confirmBtn = new Button("Confirmed");
-		completeBtn = new Button("Completed");
+		turnamenBtn = new Button("Turnamen");
+		sparringBtn = new Button("Sparring");
 		
 		homeImg = new Image("InHome.png");
-		tandingImg = new Image("InTanding.png");
-		historyImg = new Image("AcHistory.png");
+		tandingImg = new Image("AcTanding.png");
+		historyImg = new Image("InHistory.png");
 		forumImg = new Image("InForum.png");
 		profileImg = new Image("InProfile.png");
 		
@@ -104,7 +104,7 @@ public class History extends Application{
 		forumIV = new ImageView(forumImg);
 		profileIV = new ImageView(profileImg);
 		
-		bookingListView = new ListView<>();
+		turnamenListView = new ListView<>();
 		
 		judulFont = Font.font("Poppins", FontWeight.EXTRA_BOLD, 30);
 		font16Semi = Font.font("Poppins", FontWeight.BOLD, 16);
@@ -117,63 +117,62 @@ public class History extends Application{
 	private void initializeListView() {
 		getData();
 			
-		for (HistoryObject historyObject : dataHistory) {
-			FlowPane fp = new FlowPane();
+		for (Lomba lomba : dataLomba) {
 			GridPane gp = new GridPane();
 			HBox hb = new HBox();
 			
-			InputStream inputStream;
-			Image image, iconImg = new Image("iconDate.png");
-			ImageView imageView = new ImageView(), iconImgView = new ImageView(iconImg);
+			Image locationImg = new Image("iconLocation.png");
+			Image prizepoolImg = new Image("iconPrize.png");
+			Image dateImg = new Image("iconDate.png");
 			
-			Label namaGymnasium = new Label(), tanggalLabel = new Label();
+			ImageView locationIV = new ImageView(locationImg);
+			ImageView prizepoolIV = new ImageView(prizepoolImg);
+			ImageView dateIV = new ImageView(dateImg);
 			
-			tanggalLabel.setFont(font12);
-			namaGymnasium.setFont(font16Semi);
-			try {
-				inputStream = historyObject.getFotoGymnasium().getBinaryStream();
-				image = new Image(inputStream, 80, 80, false, false);
-				imageView.setImage(image);
-				
-				namaGymnasium.setText(historyObject.getNamaGymnasium());
-				
-				Date date = historyObject.getTanggalBooking();
-				SimpleDateFormat outputDateFormat = new SimpleDateFormat("dd MMM yyyy");
-				String formatDate = outputDateFormat.format(date);
-				
-				tanggalLabel.setText(formatDate);
-				
-				//positioning
-				gp.add(namaGymnasium, 0, 0, 2, 1);
-				gp.add(iconImgView, 0, 1);
-				gp.add(tanggalLabel, 1, 1);
-				
-				fp.getChildren().addAll(imageView, gp);
-				
-				hb.getChildren().add(fp);
-				
-				//style
-				hb.setPrefWidth(300);
-				
-				imageView.setStyle("-fx-border-radius: 6px;");
-				
-				fp.setAlignment(Pos.TOP_LEFT);
-				fp.setHgap(16);
-				fp.setPadding(new Insets(5));
+			Label namaTurnamenLbl = new Label();
+			Label locationLbl = new Label();
+			Label prizepoolLbl = new Label();
+			Label tanggalLabel = new Label();
+			
+			//setData
+			Date date = lomba.getTanggalLomba();
+			SimpleDateFormat outputDateFormat = new SimpleDateFormat("dd MMM yyyy");
+			String formatDate = outputDateFormat.format(date);
+			
+			namaTurnamenLbl.setText(lomba.getNamaLomba());
+			locationLbl.setText(lomba.getLokasiLomba());
+			prizepoolLbl.setText("Rp" + lomba.getPrizepool());
+			tanggalLabel.setText(formatDate);
+			
+			//positioning
+			gp.add(namaTurnamenLbl, 0, 0, 2, 1);
+			gp.add(locationIV, 0, 1);
+			gp.add(locationLbl, 1, 1);
+			gp.add(prizepoolIV, 0, 2);
+			gp.add(prizepoolLbl, 1, 2);
+			gp.add(dateIV, 0, 3);
+			gp.add(tanggalLabel, 1, 3);
+						
+			hb.getChildren().add(gp);
+			
+			//style
+			hb.setPrefWidth(300);
 
-				gp.setHgap(4);
-				
-				//add to listView
-				bookingListView.getItems().add(hb);
-				
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			namaTurnamenLbl.setFont(font16Semi);
+			locationLbl.setFont(font12);
+			prizepoolLbl.setFont(font12);
+			tanggalLabel.setFont(font12);
+			
+			gp.setPrefWidth(300);;
+			gp.setHgap(4);
+			
+			//add to listView
+			turnamenListView.getItems().add(hb);
 		}
 	}
 	
 	private void positioning() {
-		subMenuHB.getChildren().addAll(confirmBtn, completeBtn);
+		subMenuHB.getChildren().addAll(turnamenBtn, sparringBtn);
 		
 		homeHB.getChildren().add(homeIV);
 		tandingHB.getChildren().add(tandingIV);
@@ -182,7 +181,7 @@ public class History extends Application{
 		profileHB.getChildren().add(profileIV);
 		
 		gpContainer.add(subMenuHB, 0, 0);
-		gpContainer.add(bookingListView, 0, 1);
+		gpContainer.add(turnamenListView, 0, 1);
 		
 		menuHB.getChildren().addAll(homeHB, tandingHB, historyHB, forumHB, profileHB);
 		
@@ -205,29 +204,29 @@ public class History extends Application{
 		subMenuHB.setSpacing(80);
 		subMenuHB.setPadding(new Insets(0, 0, 16, 0));
 		
-		confirmBtn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent transparent #FF7E46 transparent; -fx-border-width: 3;");
-		confirmBtn.setPadding(new Insets(0));
-		confirmBtn.setMinSize(110, 40);
-		confirmBtn.setMaxSize(110, 40);
-		confirmBtn.setTextFill(Color.web("#FF7E46"));
-		confirmBtn.setFont(font20Semi);
+		turnamenBtn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent transparent #FF7E46 transparent; -fx-border-width: 3;");
+		turnamenBtn.setPadding(new Insets(0));
+		turnamenBtn.setMinSize(110, 40);
+		turnamenBtn.setMaxSize(110, 40);
+		turnamenBtn.setTextFill(Color.web("#FF7E46"));
+		turnamenBtn.setFont(font20Semi);
 		
-		completeBtn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
-		completeBtn.setPadding(new Insets(0));
-		completeBtn.setMinSize(110, 40);
-		completeBtn.setMaxSize(110, 40);
-		completeBtn.setTextFill(Color.web("#A3A3A3"));
-		completeBtn.setFont(font20Semi);
+		sparringBtn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
+		sparringBtn.setPadding(new Insets(0));
+		sparringBtn.setMinSize(110, 40);
+		sparringBtn.setMaxSize(110, 40);
+		sparringBtn.setTextFill(Color.web("#A3A3A3"));
+		sparringBtn.setFont(font20Semi);
 		
 		gpContainer.setPadding(new Insets(8, 24, 0, 24));
 		gpContainer.setVgap(8);
 		
 		gpJenis.setVgap(12);
 		gpJenis.setPadding(new Insets(0, 0, 12, 0));
-		bookingListView.setMaxWidth(342);
-		bookingListView.setPrefHeight(700);
-		bookingListView.getStylesheets().add("style.css");
-		bookingListView.getStyleClass().add("list-view-1");
+		turnamenListView.setMaxWidth(342);
+		turnamenListView.setPrefHeight(700);
+		turnamenListView.getStylesheets().add("style.css");
+		turnamenListView.getStyleClass().add("list-view-1");
 		
 		menuHB.setPrefWidth(390);
 		menuHB.setStyle("-fx-background-color: #F4F4F4; -fx-border-color: black transparent transparent transparent");
@@ -242,16 +241,13 @@ public class History extends Application{
 	
 	
 	private void handler(Stage stage) {
-		completeBtn.setOnMouseClicked(e -> {
-			new HistoryCompleted(stage, Home.idCustomer);
+		sparringBtn.setOnMouseClicked(e -> {
+			new TandingSparring(stage, idCustomer);
 		});
 		
-		bookingListView.setOnMouseClicked(e -> {
-			if (!bookingListView.getSelectionModel().isEmpty()) {		
-				String idBooking = dataHistory.get(bookingListView.getSelectionModel().getSelectedIndex()).getIdBooking();
-				String idGymnasium = dataHistory.get(bookingListView.getSelectionModel().getSelectedIndex()).getIdGymnasium();
-
-				new DetailHistoryConfirmed(stage, idBooking, idGymnasium);
+		turnamenListView.setOnMouseClicked(e -> {
+			if (!turnamenListView.getSelectionModel().isEmpty()) {		
+				new DetailTurnamen(stage, dataLomba.get(turnamenListView.getSelectionModel().getSelectedIndex()));
 			}
 		});
 		
@@ -260,8 +256,8 @@ public class History extends Application{
 			new Home(stage, idCustomer);
 		});
 		
-		tandingHB.setOnMouseClicked(e -> {
-			new Tanding(stage, idCustomer);
+		historyHB.setOnMouseClicked(e -> {
+			new History(stage, idCustomer);
 		});
 		
 		forumHB.setOnMouseClicked(e -> {
@@ -273,7 +269,7 @@ public class History extends Application{
 		});
 	}
 	
-	public History(Stage stage, String idCust) {
+	public Tanding(Stage stage, String idCust) {
 		idCustomer = idCust;
 		
 		try {

@@ -210,6 +210,10 @@ public class Home extends Application{
 		});
 		
 		//menu
+		tandingHB.setOnMouseClicked(e -> {
+			new Tanding(stage, idCustomer);
+		});
+		
 		historyHB.setOnMouseClicked(e -> {
 			new History(stage, idCustomer);
 		});

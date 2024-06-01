@@ -215,6 +215,27 @@ public class DetailLapangan extends Application{
 		bookBtn.setOnMouseClicked(e -> {
 			new BookingLapangan(stage, gymnasium);
 		});
+
+		//menu
+		homeHB.setOnMouseClicked(e -> {
+			new Home(stage, Home.idCustomer);
+		});
+		
+		tandingHB.setOnMouseClicked(e -> {
+			new Tanding(stage, Home.idCustomer);
+		});
+		
+		historyHB.setOnMouseClicked(e -> {
+			new History(stage, Home.idCustomer);
+		});
+		
+		forumHB.setOnMouseClicked(e -> {
+			new Forum(stage, Home.idCustomer);
+		});
+		
+		profileHB.setOnMouseClicked(e -> {
+			new Profile(stage, Home.idCustomer);
+		});
 	}
 	
 	public DetailLapangan(Stage stage, Gymnasium inputGymnasium) {

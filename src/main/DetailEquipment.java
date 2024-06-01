@@ -248,6 +248,28 @@ public class DetailEquipment extends Application{
 			int durasi = lamaSpinner.getValue();
 			new  MetodePembayaranPeralatan(stage, idBooking, idGymnasium, idPeralatan, jumlah, durasi);
 		});
+		
+
+		//menu
+		homeHB.setOnMouseClicked(e -> {
+			new Home(stage, Home.idCustomer);
+		});
+		
+		tandingHB.setOnMouseClicked(e -> {
+			new Tanding(stage, Home.idCustomer);
+		});
+		
+		historyHB.setOnMouseClicked(e -> {
+			new History(stage, Home.idCustomer);
+		});
+		
+		forumHB.setOnMouseClicked(e -> {
+			new Forum(stage, Home.idCustomer);
+		});
+		
+		profileHB.setOnMouseClicked(e -> {
+			new Profile(stage, Home.idCustomer);
+		});
 	}
 	
 	public DetailEquipment(Stage stage, String inputIdBooking, String inputIdGymnasium, String inputIdPeralatan) {

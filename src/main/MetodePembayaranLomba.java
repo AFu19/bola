@@ -25,9 +25,10 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.DetailBooking;
 import model.Gymnasium;
+import model.Lomba;
 import util.Connect;
 
-public class MetodePembayaranPeralatan extends Application{
+public class MetodePembayaranLomba extends Application{
 	
 	private Scene scene;
 	private BorderPane bpMain;
@@ -40,16 +41,14 @@ public class MetodePembayaranPeralatan extends Application{
 	private ImageView homeIV, tandingIV, historyIV, forumIV, profileIV, backImgView;
 	private Font judulFont, namaFont, btnFont, font18Bold;
 
-	private String idBooking, idGymnasium, idPeralatan;
+	private String idLomba, namaTim;
+	private Lomba lomba;
 	private String metodePembayaranStr;
-	private int jumlah, durasi;
 	
 	private Connect connect = Connect.getInstance();
 	
-	private void insertDetailSewa() {
-		String durasiStr = durasi + ":00:00";
-		String query = String.format("INSERT INTO detailsewaperalatan VALUES('%s','%s','%d','%s','%s')", idBooking, idPeralatan, jumlah, durasiStr, metodePembayaranStr);
-		
+	private void insertForm() {
+		String query = String.format("INSERT INTO formpendaftaranlomba VALUES(null, '%s', '%s', '%s', '%s')", idLomba, Home.idCustomer, namaTim, metodePembayaranStr);
 		connect.execUpdate(query);
 	}
 	
@@ -182,7 +181,7 @@ public class MetodePembayaranPeralatan extends Application{
 	
 	private void handler(Stage stage) {
 		backHB.setOnMouseClicked(e -> {
-			new DetailEquipment(stage, idBooking, idGymnasium, idPeralatan);
+			new DetailTurnamen(stage, lomba);
 		});
 		
 		bcaVABtn.setOnMouseClicked(e -> {
@@ -231,7 +230,7 @@ public class MetodePembayaranPeralatan extends Application{
 		});
 		
 		pilihBtn.setOnMouseClicked(e -> {
-			insertDetailSewa();
+			insertForm();
 			
 			if (metodePembayaranStr.equals("OVO") || metodePembayaranStr.equals("Gopay")) {
 				Stage popupStage;
@@ -298,11 +297,11 @@ public class MetodePembayaranPeralatan extends Application{
 
 				//handler
 				popupStage.setOnHidden(event -> {
-					new Home(stage, Home.idCustomer);
+					new Tanding(stage, Home.idCustomer);
 				});
 				nextButton.setOnMouseClicked(event -> {
 					popupStage.hide();
-					new Home(stage, Home.idCustomer);
+					new Tanding(stage, Home.idCustomer);
 				});
 				
 				//main
@@ -310,11 +309,11 @@ public class MetodePembayaranPeralatan extends Application{
 				popupStage.showAndWait();
 				
 			}else {
-				new InfoPembayaranPeralatan(stage, idBooking, idGymnasium);				
+				new InfoPembayaranLomba(stage, lomba);				
 			}
 			
 		});
-		
+
 		//menu
 		homeHB.setOnMouseClicked(e -> {
 			new Home(stage, Home.idCustomer);
@@ -337,13 +336,11 @@ public class MetodePembayaranPeralatan extends Application{
 		});
 	}
 	
-	public MetodePembayaranPeralatan(Stage stage, String idBooking, String idGymnasium, String idPeralatan, int jumlah, int durasi) {				
-		this.idBooking = idBooking;
-		this.idGymnasium = idGymnasium;
-		this.idPeralatan = idPeralatan;
-		this.jumlah = jumlah;
-		this.durasi = durasi;
-		
+	public MetodePembayaranLomba(Stage stage, String idLomba, String namaTim, Lomba lomba) {				
+		this.idLomba = idLomba;
+		this.namaTim = namaTim;
+		this.lomba = lomba;
+
 		try {
 			this.start(stage);
 		} catch (Exception e) {
